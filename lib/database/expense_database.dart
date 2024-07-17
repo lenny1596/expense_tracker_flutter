@@ -20,13 +20,51 @@ class ExpenseDatabase extends ChangeNotifier {
   List<Expense> get allExpenses => _allEpxpenses;
 
   /* C R U D - O P E R A T I O N S */
-  // Create
+  
+  // Create - Add a new expense
+  Future<void> createNewExpense(Expense newExpense) async {
+    await isar.writeTxn(
+      () => isar.expenses.put(newExpense),
+    );
 
-  // Read
+    // re-render all expenses
+    await readExpenses();
+  }
 
-  // Update
+  // Read - All existing expense
+  Future<void> readExpenses() async {
+    List<Expense> fetchedExpenses = await isar.expenses.where().findAll();
 
-  // Delete
+    // send fetched expenses to local list
+    _allEpxpenses.clear();
+    _allEpxpenses.addAll(fetchedExpenses);
 
-    /* H E L P E R S */
+    // update UI
+    notifyListeners();
+  }
+
+  // Update - update an expense
+  Future<void> updateExpenses(int id, Expense updatedExpense) async {
+    // check if new expense id matches existing one's
+    updatedExpense.id = id;
+
+    await isar.writeTxn(
+      () => isar.expenses.put(updatedExpense),
+    );
+
+    // re-render all expenses
+    await readExpenses();
+  }
+
+  // Delete - delete an expense
+  Future<void> deleteExpense(int id) async {
+    await isar.writeTxn(
+      () => isar.expenses.delete(id),
+    );
+
+    // re-render all expenses
+    await readExpenses();
+  }
+
+  /* H E L P E R S */
 }
