@@ -20,7 +20,7 @@ class ExpenseDatabase extends ChangeNotifier {
   List<Expense> get allExpenses => _allEpxpenses;
 
   /* C R U D - O P E R A T I O N S */
-  
+
   // Create - Add a new expense
   Future<void> createNewExpense(Expense newExpense) async {
     await isar.writeTxn(
@@ -65,6 +65,4 @@ class ExpenseDatabase extends ChangeNotifier {
     // re-render all expenses
     await readExpenses();
   }
-
-  /* H E L P E R S */
 }
