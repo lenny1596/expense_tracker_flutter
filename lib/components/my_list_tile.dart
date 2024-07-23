@@ -18,22 +18,27 @@ class MyListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: Slidable(
         endActionPane: ActionPane(
           motion: const StretchMotion(),
+          extentRatio: 0.30,
           children: [
             // edit option
             SlidableAction(
               onPressed: onEdit,
               icon: Icons.edit,
               backgroundColor: Colors.grey.shade800,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.all(0),
             ),
             // delete option
             SlidableAction(
               onPressed: onDelete,
               icon: Icons.delete,
               backgroundColor: Colors.redAccent.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.all(0),
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(5),
                 bottomRight: Radius.circular(5),
