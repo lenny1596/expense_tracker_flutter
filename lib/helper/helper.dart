@@ -14,3 +14,11 @@ String changeFormat(double amount) {
       NumberFormat.currency(symbol: "\$ ", locale: "en_US", decimalDigits: 2);
   return format.format(amount);
 }
+
+// calculate the no. of months between start month and current month
+int calculateMonthCount(int startMonth, startYear, currentMonth, currentYear) {
+  int monthCount =
+      (currentYear - startYear) * 12 + currentMonth - startMonth + 1;
+
+  return monthCount;
+}
