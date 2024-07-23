@@ -1,5 +1,6 @@
 import 'package:expense_tracker_flutter/components/my_list_tile.dart';
 import 'package:expense_tracker_flutter/database/expense_database.dart';
+import 'package:expense_tracker_flutter/graphs/bar_graph.dart';
 import 'package:expense_tracker_flutter/helper/helper.dart';
 import 'package:expense_tracker_flutter/models/expense.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +17,20 @@ class _HomePageState extends State<HomePage> {
   // initial state
   @override
   void initState() {
+    // read expenses on init start
     Provider.of<ExpenseDatabase>(context, listen: false).readExpenses();
     super.initState();
+
+    // reload graph on init start
+    refreshGraphData();
+  }
+
+  // graph data futures
+  Future<Map<int, double>>? _monthlyExpenseFuture;
+
+  void refreshGraphData() {
+    _monthlyExpenseFuture = Provider.of<ExpenseDatabase>(context, listen: false)
+        .calcMonthlyExpense();
   }
 
   // text controller
@@ -215,7 +228,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // delete expense box
-  void deleteExpense(int expenseId) {
+  void deleteExpenseBox(int expenseId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -256,8 +269,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ExpenseDatabase>(
-      builder: (context, value, child) => Scaffold(
+    return Consumer<ExpenseDatabase>(builder: (context, value, child) {
+      // get dates
+      int startMonth = value.getStartMonth();
+      int startYear = value.getStartYear();
+      int currentMonth = DateTime.now().month;
+      int currentYear = DateTime.now().year;
+
+      // calculate the no. of months since the start month
+      int monthCount =
+          calculateMonthCount(startMonth, startYear, currentMonth, currentYear);
+
+      // display expenses for current month
+
+      return Scaffold(
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.grey.shade900,
           elevation: 5,
@@ -267,20 +292,53 @@ class _HomePageState extends State<HomePage> {
             color: Colors.white,
           ),
         ),
-        body: ListView.builder(
-          itemCount: value.allExpenses.length,
-          itemBuilder: (context, index) {
-            // return each item in a list tile
-            final eachExpense = value.allExpenses[index];
-            return MyListTile(
-              title: eachExpense.name,
-              trailing: changeFormat(eachExpense.amount),
-              onEdit: (context) => updateExpenseBox(eachExpense),
-              onDelete: (context) => deleteExpense(eachExpense.id),
-            );
-          },
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Bar Graph
+              SizedBox(
+                height: 250,
+                child: FutureBuilder(
+                  future: _monthlyExpenseFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      // check if data is loaded
+                      final monthlyExpense = snapshot.data ?? {};
+                      // create the list of monthly summary
+                      List<double> monthlyExpenseSummary = List.generate(
+                        monthCount,
+                        (index) => monthlyExpense[startMonth + index] ?? 0.0,
+                      );
+                      return MyBarGraph(
+                          monthlyExpense: monthlyExpenseSummary,
+                          startMonth: startMonth);
+                    } else {
+                      return const Text('Loading...');
+                    }
+                  },
+                ),
+              ),
+
+              // List tiles
+              Expanded(
+                child: ListView.builder(
+                  itemCount: value.allExpenses.length,
+                  itemBuilder: (context, index) {
+                    // return each item in a list tile
+                    final eachExpense = value.allExpenses[index];
+                    return MyListTile(
+                      title: eachExpense.name,
+                      trailing: changeFormat(eachExpense.amount),
+                      onEdit: (context) => updateExpenseBox(eachExpense),
+                      onDelete: (context) => deleteExpenseBox(eachExpense.id),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
