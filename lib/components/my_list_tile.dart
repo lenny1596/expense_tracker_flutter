@@ -18,7 +18,7 @@ class MyListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       child: Slidable(
         endActionPane: ActionPane(
           motion: const StretchMotion(),
@@ -47,7 +47,7 @@ class MyListTile extends StatelessWidget {
           ],
         ),
         child: ListTile(
-          tileColor: Colors.grey[900],
+          tileColor: Colors.grey.shade900,
           shape: ContinuousRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),

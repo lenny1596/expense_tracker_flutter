@@ -101,6 +101,10 @@ class _HomePageState extends State<HomePage> {
                 await context
                     .read<ExpenseDatabase>()
                     .createNewExpense(newExpense);
+
+                // refresh graph
+                refreshGraphData();
+
                 // clear controllers
                 nameController.clear();
                 amountController.clear();
@@ -200,6 +204,10 @@ class _HomePageState extends State<HomePage> {
                 await context
                     .read<ExpenseDatabase>()
                     .updateExpenses(existingId, updatedExpense);
+
+                // refresh graph
+                refreshGraphData();
+
                 // clear controllers
                 nameController.clear();
                 amountController.clear();
@@ -244,8 +252,12 @@ class _HomePageState extends State<HomePage> {
             onPressed: () async {
               // pop the dialog box
               Navigator.pop(context);
+
               // delete the expense
               await context.read<ExpenseDatabase>().deleteExpense(expenseId);
+
+              // refresh graph
+              refreshGraphData();
             },
             child: const Text('Delete'),
           ),
@@ -282,41 +294,42 @@ class _HomePageState extends State<HomePage> {
 
       // display expenses for current month
 
-      return Scaffold(
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.grey.shade900,
-          elevation: 5,
-          onPressed: addNewExpenseBox,
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
+      return SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.grey.shade400,
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: Colors.grey.shade800,
+            elevation: 5,
+            onPressed: addNewExpenseBox,
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
           ),
-        ),
-        body: SafeArea(
-          child: Column(
+          body: Column(
             children: [
+              const SizedBox(
+                height: 30,
+              ),
               // Bar Graph
-              SizedBox(
-                height: 250,
-                child: FutureBuilder(
-                  future: _monthlyExpenseFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      // check if data is loaded
-                      final monthlyExpense = snapshot.data ?? {};
-                      // create the list of monthly summary
-                      List<double> monthlyExpenseSummary = List.generate(
-                        monthCount,
-                        (index) => monthlyExpense[startMonth + index] ?? 0.0,
-                      );
-                      return MyBarGraph(
-                          monthlyExpense: monthlyExpenseSummary,
-                          startMonth: startMonth);
-                    } else {
-                      return const Text('Loading...');
-                    }
-                  },
-                ),
+              FutureBuilder(
+                future: _monthlyExpenseFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    // check if data is loaded
+                    final monthlyExpense = snapshot.data ?? {};
+                    // create the list of monthly summary
+                    List<double> monthlyExpenseSummary = List.generate(
+                      monthCount,
+                      (index) => monthlyExpense[startMonth + index] ?? 0.0,
+                    );
+                    return MyBarGraph(
+                        monthlyExpense: monthlyExpenseSummary,
+                        startMonth: startMonth);
+                  } else {
+                    return const Text('Loading...');
+                  }
+                },
               ),
 
               // List tiles
