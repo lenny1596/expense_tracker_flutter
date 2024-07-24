@@ -22,15 +22,22 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     // reload graph on init start
-    refreshGraphData();
+    refreshData();
   }
 
-  // graph data futures
+  // load futures
   Future<Map<int, double>>? _monthlyExpenseFuture;
+  Future<double>? _currentMonthTotalFuture;
 
-  void refreshGraphData() {
+  void refreshData() {
+    // show the total expense of every month
     _monthlyExpenseFuture = Provider.of<ExpenseDatabase>(context, listen: false)
         .calcMonthlyExpense();
+
+    // show the total expense of current month
+    _currentMonthTotalFuture =
+        Provider.of<ExpenseDatabase>(context, listen: false)
+            .calcCurrentMonthTotal();
   }
 
   // text controller
@@ -103,7 +110,7 @@ class _HomePageState extends State<HomePage> {
                     .createNewExpense(newExpense);
 
                 // refresh graph
-                refreshGraphData();
+                refreshData();
 
                 // clear controllers
                 nameController.clear();
@@ -206,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                     .updateExpenses(existingId, updatedExpense);
 
                 // refresh graph
-                refreshGraphData();
+                refreshData();
 
                 // clear controllers
                 nameController.clear();
@@ -257,7 +264,7 @@ class _HomePageState extends State<HomePage> {
               await context.read<ExpenseDatabase>().deleteExpense(expenseId);
 
               // refresh graph
-              refreshGraphData();
+              refreshData();
             },
             child: const Text('Delete'),
           ),
@@ -293,9 +300,37 @@ class _HomePageState extends State<HomePage> {
           calculateMonthCount(startMonth, startYear, currentMonth, currentYear);
 
       // display expenses for current month
+      List<Expense> currentMonthExpenses = value.allExpenses.where(
+        (expense) {
+          return expense.date.month == currentMonth &&
+              expense.date.year == currentYear;
+        },
+      ).toList();
 
       return SafeArea(
         child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            title: FutureBuilder(
+              future: _currentMonthTotalFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$${snapshot.data!.toStringAsFixed(2)}',
+                      ),
+                      Text(
+                        currentMonthName(),
+                      ),
+                    ],
+                  );
+                }
+                return const Text('Loading!');
+              },
+            ),
+          ),
           backgroundColor: Colors.grey.shade400,
           floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.grey.shade800,
@@ -308,9 +343,6 @@ class _HomePageState extends State<HomePage> {
           ),
           body: Column(
             children: [
-              const SizedBox(
-                height: 30,
-              ),
               // Bar Graph
               FutureBuilder(
                 future: _monthlyExpenseFuture,
@@ -332,13 +364,19 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
 
+              const SizedBox(
+                height: 25,
+              ),
+
               // List tiles
               Expanded(
                 child: ListView.builder(
-                  itemCount: value.allExpenses.length,
+                  itemCount: currentMonthExpenses.length,
                   itemBuilder: (context, index) {
+                    // reverse the list to show latest item first
+                    int reversedIndex = currentMonthExpenses.length - 1 - index;
                     // return each item in a list tile
-                    final eachExpense = value.allExpenses[index];
+                    final eachExpense = currentMonthExpenses[reversedIndex];
                     return MyListTile(
                       title: eachExpense.name,
                       trailing: changeFormat(eachExpense.amount),
