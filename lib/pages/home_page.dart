@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // load futures
-  Future<Map<int, double>>? _monthlyExpenseFuture;
+  Future<Map<String, double>>? _monthlyExpenseFuture;
   Future<double>? _currentMonthTotalFuture;
 
   void refreshData() {
@@ -311,20 +311,13 @@ class _HomePageState extends State<HomePage> {
         child: Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.transparent,
+            // display total expense for current month in app bar
             title: FutureBuilder(
               future: _currentMonthTotalFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '\$${snapshot.data!.toStringAsFixed(2)}',
-                      ),
-                      Text(
-                        currentMonthName(),
-                      ),
-                    ],
+                  return Text(
+                    '\$${snapshot.data!.toStringAsFixed(2)}',
                   );
                 }
                 return const Text('Loading!');
@@ -349,11 +342,21 @@ class _HomePageState extends State<HomePage> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     // check if data is loaded
-                    final monthlyExpense = snapshot.data ?? {};
+                    Map<String, double> monthlyExpense = snapshot.data ?? {};
                     // create the list of monthly summary
                     List<double> monthlyExpenseSummary = List.generate(
                       monthCount,
-                      (index) => monthlyExpense[startMonth + index] ?? 0.0,
+                      (index) {
+                        // calculate year-month including start-month and index
+                        int year = startYear + (startMonth + index - 1) ~/ 12;
+                        int month = (startMonth + index - 1) % 12 + 1;
+
+                        // create the key in the format of year-month
+                        String yearMonthKey = '$year-$month';
+
+                        // return total for year-month or 0.0 if doesn't exists
+                        return monthlyExpense[yearMonthKey] ?? 0.0;
+                      },
                     );
                     return MyBarGraph(
                         monthlyExpense: monthlyExpenseSummary,
