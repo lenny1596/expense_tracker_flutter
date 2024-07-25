@@ -68,34 +68,38 @@ class ExpenseDatabase extends ChangeNotifier {
 
   /* H E L P E R S */
 
-  // calculate total expense for each month
-  Future<Map<int, double>> calcMonthlyExpense() async {
+  /* calculate total expense for each month */
+  Future<Map<String, double>> calcMonthlyExpense() async {
     // read db
     await readExpenses();
 
-    Map<int, double> monthlyExpense = {};
+    // map to keep track of total exp. per month, year
+    Map<String, double> monthlyExpense = {};
 
     // iterate over each expense
     for (var expense in _allEpxpenses) {
-      final month = expense.date.month;
-      // if monthly totals does not contain month key then set its month key's value to 0
-      if (!monthlyExpense.containsKey(month)) {
-        monthlyExpense[month] = 0;
+      String yearMonth = '${expense.date.year}-${expense.date.month}';
+
+      // if year-monthly totals does not contain month key then set its month key's value to 0
+      if (!monthlyExpense.containsKey(yearMonth)) {
+        monthlyExpense[yearMonth] = 0;
       }
       // if it is not empty than add it with expense amount
-      monthlyExpense[month] = monthlyExpense[month]! + expense.amount;
+      monthlyExpense[yearMonth] = monthlyExpense[yearMonth]! + expense.amount;
     }
 
     return monthlyExpense;
   }
 
-  // calculate total expenses for current month
+  /* calculate total expenses for current month */
   Future<double> calcCurrentMonthTotal() async {
     // read db
     await readExpenses();
+
     // get current month, year
     int currentMonth = DateTime.now().month;
     int currentYear = DateTime.now().year;
+
     // get the expenses for the current month
     List<Expense> currentMonthExpenses = _allEpxpenses.where(
       (expense) {
@@ -104,13 +108,14 @@ class ExpenseDatabase extends ChangeNotifier {
       },
     ).toList();
 
+    // sum up the total expense for the current month
     double totalExpense =
         currentMonthExpenses.fold(0, (sum, expense) => sum + expense.amount);
 
     return totalExpense;
   }
 
-  // calculate the start month
+  /* calculate the start month */
   int getStartMonth() {
     // default to current month if there are no expense
     if (_allEpxpenses.isEmpty) {
@@ -123,7 +128,7 @@ class ExpenseDatabase extends ChangeNotifier {
     return _allEpxpenses.first.date.month;
   }
 
-  // calculate the start year
+  /* calculate the start year */
   int getStartYear() {
     // default to current month if there are no expense
     if (_allEpxpenses.isEmpty) {
