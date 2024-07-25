@@ -20,6 +20,15 @@ class _MyBarGraphState extends State<MyBarGraph> {
   // list of each bar graph data
   List<EachGraph> barData = [];
 
+  // init state for scroll gesture
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (callback) => scrollToLatest(),
+    );
+  }
+
   // initialize the bar data, use monthly expense to creat list of bars
   void initializeBarData() {
     barData = List.generate(
@@ -44,6 +53,16 @@ class _MyBarGraphState extends State<MyBarGraph> {
     return max;
   }
 
+  // scroll controller to make sure it scrolls to the latest on init launch
+  final ScrollController _scrollController = ScrollController();
+  void scrollToLatest() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(seconds: 1),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // initialize bar data method
@@ -54,6 +73,7 @@ class _MyBarGraphState extends State<MyBarGraph> {
     double spaceBetweenBars = 15;
 
     return SingleChildScrollView(
+      controller: _scrollController,
       scrollDirection: Axis.horizontal,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0),
